@@ -1,0 +1,274 @@
+﻿@model AhmadHRManagementSystem.Models.Employee
+
+@{
+    ViewData["Title"] = "Eidt";
+    var maxDate = DateTime.Today.AddYears(-18).ToString("yyyy-MM-dd");
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<h1>Edit</h1>
+
+<h4>Employee</h4>
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <input type="hidden" asp-for="Id" />
+
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <label asp-for="FirstName" class="control-label mb-1">
+                        First Name
+                        <span class="text-danger fs-5">*</span>
+                    </label>
+                    <input asp-for="FirstName" class="form-control" />
+                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="LastName" class="control-label mb-1">
+                        Last Name
+                        <span class="text-danger fs-5">*</span>
+                    </label>
+                    <input asp-for="LastName" class="form-control" />
+                    <span asp-validation-for="LastName" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Gender" class="control-label mb-1">
+                        Gender
+                        <span class="text-danger fs-5">*</span>
+                    </label>
+                    <select asp-for="Gender" class="form-control">
+                        <option value="" disabled selected>-- Select Gender --</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="DateOfBirth" class="control-label mb-1">
+                        Date of Birth
+                        <span>
+                            <i class="bi bi-info-circle-fill text-secondary"
+                               data-bs-toggle="tooltip"
+                               data-bs-placement="top"
+                               title="Employee must meet the minimum age requirement of 18 years.">
+                            </i>
+                        </span>
+                        <span class="text-danger fs-5">*</span>
+                    </label>
+                    <input asp-for="DateOfBirth" type="date" class="form-control" id="DateOfBirth"
+                           max="@maxDate" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-group row mt-2">
+                <div class="col-md-3">
+                    <label asp-for="PhoneNumber" class="control-label mb-1">
+                        Phone Number
+                        <span class="text-danger fs-5">*</span>
+                    </label>
+                    <input asp-for="PhoneNumber" id="PhoneNumber" type="text" class="form-control" placeholder="03XX-XXXXXXX" maxlength="12" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="CNIC" class="control-label mb-1">
+                        CNIC Number
+                        <span class="text-danger fs-5">*</span>
+                    </label>
+                    <input asp-for="CNIC" id="CNIC" type="text" class="form-control" placeholder="XXXXX-XXXXXXX-X" maxlength="15" />
+                    <span asp-validation-for="CNIC" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="Email" class="control-label mb-1">
+                        Email
+                    </label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="HireDate" class="control-label mb-1">
+                        Hiring Date
+                        <span class="text-danger fs-5">*</span>
+                    </label>
+                    <input asp-for="HireDate" type="date" class="form-control"
+                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="HireDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="d-flex mt-2">
+                <div class="d-flex flex-column col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Salary" class="control-label mb-1">
+                            Salary
+                            <span class="text-danger fs-5">*</span>
+                        </label>
+                        <input asp-for="Salary" type="number" class="form-control" />
+                        <span asp-validation-for="Salary" class="text-danger"></span>
+                    </div>
+                    <div>
+                        <label asp-for="EmployeeDesignationID" class="control-label mb-1">
+                            Designation Name
+                            <span class="text-danger fs-5">*</span>
+                        </label>
+                        <select asp-for="EmployeeDesignationID" class="form-control" asp-items="ViewBag.DesignationList">
+                            <option value="" disabled>-- Select Designation --</option>
+                        </select>
+                        <span asp-validation-for="EmployeeDesignationID" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6 ps-md-3">
+                    <label asp-for="Address" class="control-label mb-1">
+                        Address
+                    </label>
+                    <textarea asp-for="Address" class="form-control" rows="5"></textarea>
+                </div>
+            </div>
+
+
+            <!-- Buttons -->
+            <div class="form-group mt-2">
+                <input type="submit" value="Update" class="btn btn-warning me-1" />
+                <a asp-action="Index" class="btn btn-outline-dark">Back to List</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+
+        <!-- For Phone Number validation code -->
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const phoneNumberInput = document.getElementById("PhoneNumber");
+
+                // Pre-fill with "03" when the input field gains focus
+                phoneNumberInput.addEventListener("focus", function () {
+                    if (!phoneNumberInput.value.startsWith("03")) {
+                        phoneNumberInput.value = "03";
+                    }
+                });
+
+                // Handle keydown events
+                phoneNumberInput.addEventListener("keydown", function (e) {
+                    const value = phoneNumberInput.value;
+
+                    // Prevent deleting or modifying "03"
+                    if ((e.key === "Backspace" || e.key === "Delete") && value.length <= 2) {
+                        e.preventDefault();
+                        return;
+                    }
+
+                    // Allow only digits, backspace, delete, and navigation keys
+                    if (
+                        !(
+                            (e.key >= "0" && e.key <= "9") || // Numbers
+                            e.key === "Backspace" ||          // Backspace
+                            e.key === "Delete" ||            // Delete
+                            e.key === "ArrowLeft" ||         // Arrow navigation
+                            e.key === "ArrowRight" ||        // Arrow navigation
+                            e.key === "Tab"                 // Tab key
+                        )
+                    ) {
+                        e.preventDefault();
+                    }
+                });
+
+                // Handle input events for formatting
+                phoneNumberInput.addEventListener("input", function () {
+                    let value = phoneNumberInput.value;
+
+                    // Ensure the first two characters are always "03"
+                    if (!value.startsWith("03")) {
+                        phoneNumberInput.value = "03";
+                        return;
+                    }
+
+                    // Insert dash automatically after the 4th character
+                    if (value.length === 5 && value[4] !== "-") {
+                        phoneNumberInput.value = value.slice(0, 4) + "-" + value.slice(4);
+                    }
+
+                    // Restrict length to "03XX-XXXXXXX"
+                    if (value.length > 12) {
+                        phoneNumberInput.value = value.slice(0, 12);
+                    }
+                });
+
+                // Clear the input field if the user removes focus and has entered only "03"
+                phoneNumberInput.addEventListener("blur", function () {
+                    if (phoneNumberInput.value === "03") {
+                        phoneNumberInput.value = "";
+                    }
+                });
+            });
+        </script>
+
+        <!-- For CNIC Number validation code -->
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const cnicInput = document.getElementById("CNIC");
+
+                cnicInput.addEventListener("keydown", function (e) {
+                    const value = cnicInput.value;
+
+                    // Allow only numbers, dashes (if present at the right position), and control keys
+                    if (
+                        !(
+                            (e.key >= "0" && e.key <= "9") || // Numbers
+                            e.key === "Backspace" ||          // Backspace
+                            e.key === "Delete" ||            // Delete
+                            e.key === "ArrowLeft" ||         // Left arrow
+                            e.key === "ArrowRight" ||        // Right arrow
+                            e.key === "Tab"                 // Tab
+                        )
+                    ) {
+                        e.preventDefault();
+                    }
+                });
+
+                cnicInput.addEventListener("input", function () {
+                    let value = cnicInput.value;
+
+                    // Remove any invalid characters
+                    value = value.replace(/[^0-9-]/g, "");
+
+                    // Auto-insert dashes at the correct positions
+                    if (value.length > 5 && value[5] !== "-") {
+                        value = value.slice(0, 5) + "-" + value.slice(5);
+                    }
+                    if (value.length > 13 && value[13] !== "-") {
+                        value = value.slice(0, 13) + "-" + value.slice(13);
+                    }
+
+                    // Restrict to a maximum of 15 characters
+                    if (value.length > 15) {
+                        value = value.slice(0, 15);
+                    }
+
+                    cnicInput.value = value;
+                });
+            });
+        </script>
+
+        <!-- For Age (18 years) info tooltip -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+              tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+              });
+            });
+        </script>
+    }
+}

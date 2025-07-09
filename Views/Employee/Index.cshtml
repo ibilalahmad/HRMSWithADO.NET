@@ -1,0 +1,63 @@
+﻿@model IEnumerable<AhmadHRManagementSystem.Models.Employee>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<h2 class="text-center">Employee List</h2>
+<div class="d-flex justify-content-between">
+    <a class="btn btn-primary my-2 mb-3" asp-action="Create">
+        <i class="bi bi-plus-circle me-2"></i>Add New Employee
+    </a>
+    <a class="btn btn-warning my-2 mb-3" asp-action="RecycleBinIndex">
+        <i class="bi bi-trash3-fill me-2"></i>Recycle Bin
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="text-center">
+            <tr class="text-center">
+                <th>Id</th>
+                <th>Name</th>
+                <th>Gender</th>
+                <th>Age</th>
+                <th>Designation</th>
+                <th>Department</th>
+                <th>Salary</th>
+                <th>Last Updated</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var employee in Model)
+            {
+                <tr class="text-center">
+                    <td>@employee.Id</td>
+                    <td>@employee.DisplayFullName</td>
+                    <td>@employee.Gender</td>
+                    <td>@employee.DisplayAge</td>
+                    <td>@employee.DesignationName</td>
+                    <td>@employee.DepartmentName</td>
+                    <td>@employee.Salary</td>
+                    <td>@employee.DisplayUpdatedDate</td>
+                    <td>
+                        <a class="btn btn-primary" asp-action="Edit" asp-controller="Employee" asp-route-id="@employee.Id"><i class="bi bi-pencil-square"></i></a>
+                        <a class="btn btn-secondary" asp-action="Detail" asp-controller="Employee" asp-route-id="@employee.Id"><i class="bi bi-eye-fill"></i></a>
+                        <a class="btn btn-outline-danger" asp-action="Delete" asp-controller="Employee" asp-route-id="@employee.Id"><i class="bi bi-trash3-fill"></i></a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,28 @@
+﻿@model AhmadHRManagementSystem.Models.EmployeeDesignation
+
+@{
+    ViewData["Title"] = "Delete Department";
+}
+
+<div class="alert alert-danger">
+    <strong>Are you sure you want to delete this designation?</strong>
+</div>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-3">ID</dt>
+        <dd class="col-sm-9">@Model.Id</dd>
+
+        <dt class="col-sm-3">Designation Name</dt>
+        <dd class="col-sm-9">@Model.DesignationName</dd>
+
+        <dt class="col-sm-3">Department</dt>
+        <dd class="col-sm-9">@Model.DepartmentName?.DepartmentName</dd>
+    </dl>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

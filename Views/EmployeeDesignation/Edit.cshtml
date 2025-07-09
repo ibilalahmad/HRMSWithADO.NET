@@ -1,0 +1,40 @@
+﻿@model AhmadHRManagementSystem.Models.EmployeeDesignation
+
+@{
+    ViewData["Title"] = "Edit Designation";
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+
+<h2>Edit Employee Designation</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="DesignationName" class="form-label"></label>
+        <input asp-for="DesignationName" class="form-control" />
+        <span asp-validation-for="DesignationName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-3">
+        <label asp-for="EmployeeDepartmentID" class="form-label">Select Department</label>
+        <select asp-for="EmployeeDepartmentID" class="form-control" asp-items="ViewBag.Departments">
+            <option value="">-- Select Department --</option>
+        </select>
+        <span asp-validation-for="EmployeeDepartmentID" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Update</button>
+    <a asp-action="Index" class="btn btn-secondary mt-3">Cancel</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
