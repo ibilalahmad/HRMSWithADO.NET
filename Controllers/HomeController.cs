@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using AhmadHRManagementSystem.Data;
 using AhmadHRManagementSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,9 +16,17 @@ namespace AhmadHRManagementSystem.Controllers
 
         public IActionResult Index()
         {
+            // Check if user is logged in
+            if (string.IsNullOrEmpty(HttpContext.Session.GetString("Username")))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            ViewBag.Username = HttpContext.Session.GetString("Username");
             return View();
         }
 
+        [AuthorizeRole("Admin", "User")]
         public IActionResult Privacy()
         {
             return View();

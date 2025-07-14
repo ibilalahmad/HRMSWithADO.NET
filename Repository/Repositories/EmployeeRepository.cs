@@ -58,8 +58,8 @@ namespace AhmadHRManagementSystem.Repository.Repositories
             {
                 throw new CustomException(
                     ex is SqlException sqlEx
-                        ? $"Database error: {sqlEx.Message}"
-                        : $"An unexpected error occurred while retrieving employees: {ex.Message}",
+                        ? sqlEx.Message
+                        : $"An unexpected error occurred while retrieving employees.",
                     ex);
             }
 
@@ -76,7 +76,7 @@ namespace AhmadHRManagementSystem.Repository.Repositories
                 await connection.OpenAsync();
 
                 var query = @"
-                        SELECT e.*, d.DesignationName, dept.DepartmentName
+                        SELECT e.*, e.EmployeeDesignationID, d.DesignationName, dept.DepartmentName
                         FROM Employee e
                         INNER JOIN EmployeeDesignation d ON e.EmployeeDesignationID = d.Id
                         INNER JOIN EmployeeDepartment dept ON d.EmployeeDepartmentID = dept.Id
@@ -105,6 +105,7 @@ namespace AhmadHRManagementSystem.Repository.Repositories
                         CreatedDate = reader.GetDateTime(reader.GetOrdinal("CreatedDate")),
                         UpdatedDate = reader["UpdatedDate"] == DBNull.Value ? null : reader.GetDateTime(reader.GetOrdinal("UpdatedDate")),
                         Address = reader["Address"] == DBNull.Value ? null : reader["Address"].ToString(),
+                        EmployeeDesignationID = reader.GetInt32(reader.GetOrdinal("EmployeeDesignationID")),
                         DesignationName = reader["DesignationName"].ToString(),
                         DepartmentName = reader["DepartmentName"].ToString()
                     };
@@ -166,9 +167,9 @@ namespace AhmadHRManagementSystem.Repository.Repositories
             {
                 throw new CustomException(
                     ex is SqlException sqlEx
-                    ? sqlEx.Message
-                    : "An unexpected error occurred while adding the employee.", ex
-                );
+                        ? sqlEx.Message
+                        : $"An unexpected error occurred while adding the employee.",
+                    ex);
             }
         }
 
@@ -179,10 +180,51 @@ namespace AhmadHRManagementSystem.Repository.Repositories
                 using var connection = _dbHelper.GetConnection();
                 await connection.OpenAsync();
 
-                using var command = new SqlCommand("sp_UpdateEmployee", connection)
+                // Get current employee data for comparison
+                var currentEmployee = await GetByIdAsync(employee.Id);
+                if (currentEmployee == null)
                 {
-                    CommandType = CommandType.StoredProcedure
-                };
+                    throw new KeyNotFoundException($"Employee with ID {employee.Id} not found");
+                }
+
+                // Validate CNIC if it's being changed
+                if (employee.CNIC?.Trim() != currentEmployee.CNIC?.Trim())
+                {
+                    // Check for duplicate CNIC
+                    using var checkCommand = new SqlCommand(
+                        "SELECT COUNT(1) FROM Employee WHERE CNIC = @CNIC AND Id <> @Id",
+                        connection);
+
+                    checkCommand.Parameters.AddWithValue("@CNIC", employee.CNIC?.Trim());
+                    checkCommand.Parameters.AddWithValue("@Id", employee.Id);
+
+                    var exists = (int)await checkCommand.ExecuteScalarAsync();
+                    if (exists > 0)
+                    {
+                        throw new InvalidOperationException("Another employee with this CNIC already exists");
+                    }
+                }
+
+                // Update query
+                var query = @"
+                        UPDATE Employee
+                        SET 
+                            FirstName = @FirstName,
+                            LastName = @LastName,
+                            Gender = @Gender,
+                            DateOfBirth = @DateOfBirth,
+                            CNIC = @CNIC,
+                            PhoneNumber = @PhoneNumber,
+                            Email = @Email,
+                            HireDate = @HireDate,
+                            Salary = @Salary,
+                            IsActive = @IsActive,
+                            Address = @Address,
+                            EmployeeDesignationID = @EmployeeDesignationID,
+                            UpdatedDate = GETDATE()
+                        WHERE Id = @Id";
+
+                using var command = new SqlCommand(query, connection);
 
                 // Add parameters
                 command.Parameters.AddWithValue("@Id", employee.Id);
@@ -190,30 +232,29 @@ namespace AhmadHRManagementSystem.Repository.Repositories
                 command.Parameters.AddWithValue("@LastName", employee.LastName);
                 command.Parameters.AddWithValue("@Gender", employee.Gender);
                 command.Parameters.AddWithValue("@DateOfBirth", employee.DateOfBirth);
-                command.Parameters.AddWithValue("@CNIC", employee.CNIC);
+                command.Parameters.AddWithValue("@CNIC", employee.CNIC?.Trim() ?? (object)DBNull.Value);
                 command.Parameters.AddWithValue("@PhoneNumber", employee.PhoneNumber);
-                command.Parameters.AddWithValue("@Email", employee.Email?.ToLower() ?? (object)DBNull.Value); // Convert email to lowercase
+                command.Parameters.AddWithValue("@Email", employee.Email?.ToLower() ?? (object)DBNull.Value);
                 command.Parameters.AddWithValue("@HireDate", employee.HireDate);
                 command.Parameters.AddWithValue("@Salary", employee.Salary);
                 command.Parameters.AddWithValue("@IsActive", employee.IsActive);
                 command.Parameters.AddWithValue("@Address", string.IsNullOrEmpty(employee.Address) ? DBNull.Value : employee.Address);
+                command.Parameters.AddWithValue("@EmployeeDesignationID", employee.EmployeeDesignationID);
 
-                // Execute the command
                 int rowsAffected = await command.ExecuteNonQueryAsync();
 
-                // Throw an exception if no rows were affected
                 if (rowsAffected <= 0)
                 {
                     throw new Exception("Employee update failed. No rows were affected.");
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not CustomException)
             {
-                throw ex is SqlException sqlEx
-                    ? sqlEx.Number == 2627
-                        ? new CustomException("An employee with the same CNIC, Phone Number or Email already exists.", sqlEx)
-                        : new CustomException("Database error occurred while updating the employee.", sqlEx)
-                    : new CustomException("An unexpected error occurred while updating the employee.", ex);
+                throw new CustomException(
+                    ex is SqlException
+                        ? "Database error occurred while updating employee"
+                        : "An unexpected error occurred while updating employee",
+                    ex);
             }
         }
 
@@ -224,7 +265,7 @@ namespace AhmadHRManagementSystem.Repository.Repositories
                 using var connection = _dbHelper.GetConnection();
                 await connection.OpenAsync();
 
-                using var command = new SqlCommand("UPDATE Employees SET IsActive = 0 WHERE Id = @Id AND IsActive = 1;", connection);
+                using var command = new SqlCommand("UPDATE Employee SET IsActive = 0 WHERE Id = @Id AND IsActive = 1;", connection);
 
                 command.Parameters.AddWithValue("@Id", id);
 
@@ -238,8 +279,8 @@ namespace AhmadHRManagementSystem.Repository.Repositories
             catch (Exception ex)
             {
                 throw ex is SqlException sqlEx
-                    ? new CustomException("Database error occurred while deactivating the employee.", sqlEx)
-                    : new CustomException("An unexpected error occurred while deactivating the employee.", ex);
+                    ? new CustomException("Database error occurred while deleting the employee.", sqlEx)
+                    : new CustomException("An unexpected error occurred while deleting the employee.", ex);
             }
         }
 
@@ -250,7 +291,7 @@ namespace AhmadHRManagementSystem.Repository.Repositories
                 using var connection = _dbHelper.GetConnection();
                 await connection.OpenAsync();
 
-                using var command = new SqlCommand("UPDATE Employees SET IsActive = 1 WHERE Id = @Id AND IsActive = 0;", connection);
+                using var command = new SqlCommand("UPDATE Employee SET IsActive = 1 WHERE Id = @Id AND IsActive = 0;", connection);
 
                 command.Parameters.AddWithValue("@Id", id);
 
@@ -268,187 +309,5 @@ namespace AhmadHRManagementSystem.Repository.Repositories
                     : new CustomException("An unexpected error occurred while restoring the employee.", ex);
             }
         }
-
-        //public async Task<List<Employee>> GetAllEmployeesAsync()
-        //{
-        //    var employees = new List<Employee>();
-        //    try
-        //    {
-        //        using var connection = new SqlConnection(_connectionString);
-        //        await connection.OpenAsync();
-
-        //        using var command = new SqlCommand("sp_GetEmployeesDetail", connection)
-        //        {
-        //            CommandType = CommandType.StoredProcedure
-        //        };
-
-        //        using var reader = await command.ExecuteReaderAsync();
-        //        while (await reader.ReadAsync())
-        //        {
-        //            // Try parsing the gender string into the Gender enum
-        //            Enum.TryParse(reader["Gender"].ToString(), out Gender gender);
-
-        //            employees.Add(new Employee
-        //            {
-        //                Id = Convert.ToInt32(reader["Id"]),
-        //                FirstName = reader["FirstName"].ToString(),
-        //                LastName = reader["LastName"].ToString(),
-        //                Gender = gender,
-        //                DateOfBirth = Convert.ToDateTime(reader["DateOfBirth"]),
-        //                CNIC = reader["CNIC"].ToString(),
-        //                PhoneNumber = reader["PhoneNumber"].ToString(),
-        //                Email = reader["Email"] == DBNull.Value ? null : reader["Email"].ToString(),
-        //                HireDate = Convert.ToDateTime(reader["HireDate"]),
-        //                JobTitle = reader["JobTitle"].ToString(),
-        //                Salary = Convert.ToDecimal(reader["Salary"]),
-        //                IsActive = Convert.ToBoolean(reader["IsActive"]),
-        //                CreatedDate = Convert.ToDateTime(reader["CreatedDate"]),
-        //                UpdatedDate = reader["UpdatedDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["UpdatedDate"]),
-        //                Address = reader["Address"] == DBNull.Value ? null : reader["Address"].ToString()
-        //            });
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Log error without throwing an exception
-        //        _logger.LogError(ex, "An error occurred while retrieving employees in {Method}", nameof(GetAllEmployeesAsync));
-        //    }
-
-        //    return employees;
-        //}
-
-
-        //public async Task<Employee> GetEmployeeByIdAsync(int id)
-        //{
-        //    Employee employee = null;
-
-        //    try
-        //    {
-        //        using (SqlConnection connection = new SqlConnection(_connectionString))
-        //        {
-        //            await connection.OpenAsync();
-
-        //            using (SqlCommand command = new SqlCommand("SELECT * FROM Employee WHERE Id = @Id", connection))
-        //            {
-        //                command.Parameters.AddWithValue("@Id", id);
-
-        //                using (SqlDataReader reader = await command.ExecuteReaderAsync())
-        //                {
-        //                    if (await reader.ReadAsync())
-        //                    {
-        //                        if (!Enum.TryParse(reader["Gender"].ToString(), out Gender gender))
-        //                        {
-        //                            throw new Exception($"Invalid gender value '{reader["Gender"]}' found in database.");
-        //                        }
-
-        //                        employee = new Employee
-        //                        {
-        //                            Id = Convert.ToInt32(reader["Id"]),
-        //                            FirstName = reader["FirstName"].ToString(),
-        //                            LastName = reader["LastName"].ToString(),
-        //                            Gender = gender,
-        //                            DateOfBirth = Convert.ToDateTime(reader["DateOfBirth"]),
-        //                            CNIC = reader["CNIC"].ToString(),
-        //                            PhoneNumber = reader["PhoneNumber"].ToString(),
-        //                            Email = reader["Email"].ToString(),
-        //                            HireDate = Convert.ToDateTime(reader["HireDate"]),
-        //                            JobTitle = reader["JobTitle"].ToString(),
-        //                            Salary = Convert.ToDecimal(reader["Salary"]),
-        //                            IsActive = Convert.ToBoolean(reader["IsActive"]),
-        //                            CreatedDate = Convert.ToDateTime(reader["CreatedDate"]),
-        //                            UpdatedDate = reader["UpdatedDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["UpdatedDate"]),
-        //                            Address = reader["Address"].ToString()
-        //                        };
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error fetching employee with ID {Id}", id);
-        //    }
-
-        //    return employee;
-        //}
-
-        //public async Task InsertEmployeeAsync(Employee employee)
-        //{
-        //    try
-        //    {
-        //        using var connection = new SqlConnection(_connectionString);
-        //        await connection.OpenAsync();
-
-        //        using var command = new SqlCommand("sp_InsertEmployee", connection)
-        //        {
-        //            CommandType = CommandType.StoredProcedure
-        //        };
-
-        //        command.Parameters.AddWithValue("@FirstName", employee.FirstName);
-        //        command.Parameters.AddWithValue("@LastName", employee.LastName);
-        //        command.Parameters.AddWithValue("@Gender", employee.Gender.ToString());
-        //        command.Parameters.AddWithValue("@DateOfBirth", employee.DateOfBirth);
-        //        command.Parameters.AddWithValue("@CNIC", employee.CNIC);
-        //        command.Parameters.AddWithValue("@PhoneNumber", employee.PhoneNumber);
-        //        command.Parameters.AddWithValue("@Email", string.IsNullOrEmpty(employee.Email) ? DBNull.Value : employee.Email.ToLower());
-        //        command.Parameters.AddWithValue("@HireDate", employee.HireDate);
-        //        command.Parameters.AddWithValue("@JobTitle", employee.JobTitle);
-        //        command.Parameters.AddWithValue("@Salary", employee.Salary);
-        //        command.Parameters.AddWithValue("@IsActive", employee.IsActive);
-        //        command.Parameters.AddWithValue("@Address", (object?)employee.Address ?? DBNull.Value);
-
-        //        if (await command.ExecuteNonQueryAsync() <= 0)
-        //        {
-        //            throw new Exception("Employee insertion failed. No rows affected.");
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error inserting employee in {Method}", nameof(InsertEmployeeAsync));
-        //        throw;
-        //    }
-        //}
-
-
-        //public async Task UpdateEmployeeAsync(Employee employee)
-        //{
-        //    try
-        //    {
-        //        using var connection = new SqlConnection(_connectionString);
-        //        await connection.OpenAsync();
-
-        //        using var command = new SqlCommand("sp_UpdateEmployee", connection)
-        //        {
-        //            CommandType = CommandType.StoredProcedure
-        //        };
-
-        //        command.Parameters.AddWithValue("@Id", employee.Id);
-        //        command.Parameters.AddWithValue("@FirstName", employee.FirstName);
-        //        command.Parameters.AddWithValue("@LastName", employee.LastName);
-        //        command.Parameters.AddWithValue("@Gender", employee.Gender.ToString());
-        //        command.Parameters.AddWithValue("@DateOfBirth", employee.DateOfBirth);
-        //        command.Parameters.AddWithValue("@CNIC", employee.CNIC);
-        //        command.Parameters.AddWithValue("@PhoneNumber", employee.PhoneNumber);
-        //        command.Parameters.AddWithValue("@Email", employee.Email?.ToLower() ?? (object)DBNull.Value); // Convert email to lowercase
-        //        command.Parameters.AddWithValue("@HireDate", employee.HireDate);
-        //        command.Parameters.AddWithValue("@JobTitle", employee.JobTitle);
-        //        command.Parameters.AddWithValue("@Salary", employee.Salary);
-        //        command.Parameters.AddWithValue("@IsActive", employee.IsActive);
-        //        command.Parameters.AddWithValue("@Address", string.IsNullOrEmpty(employee.Address) ? DBNull.Value : employee.Address);
-
-        //        var rowsAffected = await command.ExecuteNonQueryAsync();
-
-        //        // Throw an exception if no rows were affected
-        //        if (rowsAffected <= 0)
-        //        {
-        //            throw new Exception("Employee update failed. No rows were affected.");
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "An error occurred while updating employee with ID {EmployeeId}", employee.Id);
-        //        throw;  // Re-throw the exception to be handled by the caller
-        //    }
-        //}
     }
 }

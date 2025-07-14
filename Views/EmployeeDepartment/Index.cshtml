@@ -3,8 +3,8 @@
 @{
     ViewData["Title"] = "Index";
 }
-
-@if (TempData["ErrorMessage"] != null)
+<partial name="_Notification" />
+@* @if (TempData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
 }
@@ -17,7 +17,7 @@
 @if (TempData["UpdateMessage"] != null)
 {
     <div class="alert alert-success">@TempData["UpdateMessage"]</div>
-}
+} *@
 
 <h2 class="text-center">Employee Department List</h2>
 <div class="d-flex justify-content-between">

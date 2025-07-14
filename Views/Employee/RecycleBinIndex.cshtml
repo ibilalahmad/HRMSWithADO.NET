@@ -1,0 +1,46 @@
+﻿@model IEnumerable<Employee>
+
+@{
+    ViewData["Title"] = "Recycle Bin - Employees";
+}
+
+<h2 class="text-center">Deleted Employee List</h2>
+@* <h4 class="text-center text-info">The employees record will be deleted after 7 days.</h4>
+*@
+ <a class="btn btn-primary my-2 mb-3" asp-action="Index">
+    <i class="bi bi-arrow-left-circle me-2"></i>Back to Employee List
+</a>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="text-center">
+            <tr class="text-center">
+                <th>Id</th>
+                <th>Name</th>
+                <th>Gender</th>
+                <th>Age</th>
+                <th>CNIC</th>
+                <th>Designation</th>
+                <th>Department</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var employee in Model)
+            {
+                <tr class="text-center">
+                    <td>@employee.Id</td>
+                    <td>@employee.DisplayFullName</td>
+                    <td>@employee.Gender</td>
+                    <td>@employee.DisplayAge</td>
+                    <td>@employee.CNIC</td>
+                    <td>@employee.DesignationName</td>
+                    <td>@employee.DepartmentName</td>
+                    <td>
+                        <a class="btn btn-primary" asp-action="RestoreEmployee" asp-controller="Employee" asp-route-id="@employee.Id"><i class="bi bi-box-arrow-up-left me-2"></i>Restore</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

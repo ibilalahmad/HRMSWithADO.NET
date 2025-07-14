@@ -1,4 +1,5 @@
-﻿using AhmadHRManagementSystem.Exceptions;
+﻿using AhmadHRManagementSystem.Data;
+using AhmadHRManagementSystem.Exceptions;
 using AhmadHRManagementSystem.Models;
 using AhmadHRManagementSystem.UnitOfWork;
 using Microsoft.AspNetCore.Mvc;
@@ -6,6 +7,7 @@ using Microsoft.Data.SqlClient;
 
 namespace AhmadHRManagementSystem.Controllers
 {
+    [AuthorizeRole("Admin")]
     public class EmployeeDepartmentController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -132,7 +134,7 @@ namespace AhmadHRManagementSystem.Controllers
 
                         if (rowsAffected > 0)
                         {
-                            TempData["SuccessMessage"] = "Department deleted successfully.";
+                            TempData["DeleteMessage"] = "Department deleted successfully.";
                         }
                         else
                         {

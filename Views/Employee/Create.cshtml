@@ -5,10 +5,7 @@
     var maxDate = DateTime.Today.AddYears(-18).ToString("yyyy-MM-dd");
 }
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-}
+<partial name="_Notification" />
 
 <h1>Create</h1>
 

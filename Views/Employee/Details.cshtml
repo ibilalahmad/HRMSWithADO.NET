@@ -1,0 +1,93 @@
+﻿@model AhmadHRManagementSystem.Models.Employee
+
+@{
+    ViewData["Title"] = "Employee Details";
+}
+
+<div class="container">
+    <div class="border-bottom pb-3 mb-4">
+        <h3 class="text-primary">
+            <i class="fas fa-user"></i> Employee Details: @Model.DisplayFullName
+        </h3>
+    </div>
+
+    <div class="row">
+        <!-- Personal Information Section -->
+        <div class="col-md-6">
+            <h5 class="text-secondary text-uppercase mb-3">Personal Information</h5>
+            <dl class="row border-bottom pb-3 mb-3">
+                <dt class="col-sm-4 fw-bold">Employee ID:</dt>
+                <dd class="col-sm-8">@Model.Id</dd>
+
+                <dt class="col-sm-4 fw-bold">Full Name:</dt>
+                <dd class="col-sm-8">@Model.DisplayFullName</dd>
+
+                <dt class="col-sm-4 fw-bold">Gender:</dt>
+                <dd class="col-sm-8">@Model.Gender</dd>
+
+                <dt class="col-sm-4 fw-bold">Date of Birth:</dt>
+                <dd class="col-sm-8">@Model.DisplayDateOfBirth (@Model.DisplayAge)</dd>
+
+                <dt class="col-sm-4 fw-bold">CNIC:</dt>
+                <dd class="col-sm-8">@Model.CNIC</dd>
+
+                <dt class="col-sm-4 fw-bold">Phone:</dt>
+                <dd class="col-sm-8">@Model.PhoneNumber</dd>
+
+                <dt class="col-sm-4 fw-bold">Email:</dt>
+                <dd class="col-sm-8">@Model.DisplayEmail</dd>
+
+                <dt class="col-sm-4 fw-bold">Address:</dt>
+                <dd class="col-sm-8">@Model.DisplayAddress</dd>
+            </dl>
+        </div>
+
+        <!-- Employment & System Information Section -->
+        <div class="col-md-6">
+            <h5 class="text-secondary text-uppercase mb-3">Employment & System Information</h5>
+            <dl class="row border-bottom pb-3 mb-3">
+                <dt class="col-sm-4 fw-bold">Designation:</dt>
+                <dd class="col-sm-8">@Model.DesignationName</dd>
+
+                <dt class="col-sm-4 fw-bold">Department:</dt>
+                <dd class="col-sm-8">@Model.DepartmentName</dd>
+
+                <dt class="col-sm-4 fw-bold">Hire Date:</dt>
+                <dd class="col-sm-8">@Model.DisplayHireDate</dd>
+
+                <dt class="col-sm-4 fw-bold">Salary:</dt>
+                <dd class="col-sm-8">PKR @Model.Salary.ToString("N2")</dd>
+
+                <dt class="col-sm-4 fw-bold">Created Date:</dt>
+                <dd class="col-sm-8">@Model.DisplayCreatedDate</dd>
+
+                <dt class="col-sm-4 fw-bold">Last Updated:</dt>
+                <dd class="col-sm-8">@(Model.UpdatedDate.HasValue ? Model.DisplayUpdatedDate : "Never")</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-outline-dark">Back to List</a>
+    </div>
+</div>
+
+<style>
+    .border {
+        border: 1px solid #dee2e6 !important;
+    }
+
+    .rounded {
+        border-radius: 0.35rem !important;
+    }
+
+    dt {
+        font-weight: 500;
+        color: #6c757d;
+    }
+
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+</style>
