@@ -18,7 +18,7 @@
     <div class="form-group mt-3">
         <label asp-for="EmployeeDepartmentID" class="form-label">Select Department</label>
         <select asp-for="EmployeeDepartmentID" class="form-control" asp-items="ViewBag.Departments">
-            <option value="">-- Select Department --</option>
+            <option value="" disabled selected>-- Select Department --</option>
         </select>
         <span asp-validation-for="EmployeeDepartmentID" class="text-danger"></span>
     </div>
