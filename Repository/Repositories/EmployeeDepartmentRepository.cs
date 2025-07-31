@@ -144,15 +144,18 @@ namespace AhmadHRManagementSystem.Repository.Repositories
                     : new CustomException("An unexpected error occurred while updating Employee Department record.", ex);
             }
         }
-
+        
+        public Task SoftDeleteAsync(int id)
+        {
+        }
+        /*
         public Task SoftDeleteAsync(int id)
         {
             throw new NotImplementedException();
         }
-
+        */
         public Task RestoreDeleteAsync(int id)
         {
-            throw new NotImplementedException();
         }
     }
 }
