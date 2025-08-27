@@ -14,11 +14,8 @@ namespace AhmadHRManagementSystem.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
-        {
-            return View();
-        }
-
+        public IActionResult Login() => View();
+        
         [HttpPost]
         public IActionResult Login(string identifier, string password)
         {
